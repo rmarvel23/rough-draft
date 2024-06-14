@@ -1,0 +1,471 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNnnSDqBhoIlOkcVj+fmWzv",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/rmarvel23/projects/blob/main/Twitterprojectipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 106,
+      "metadata": {
+        "id": "2xMtzrga7R2s"
+      },
+      "outputs": [],
+      "source": [
+        "import chardet\n",
+        "import pandas as pd\n",
+        "\n",
+        "def detectar_encoding(archivo_csv):\n",
+        "    with open(archivo_csv, 'rb') as f:\n",
+        "        resultado = chardet.detect(f.read())\n",
+        "    return resultado['encoding']\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "detectar_encoding(\"/content/train.csv\")"
+      ],
+      "metadata": {
+        "id": "XJusbjIj7xRd",
+        "outputId": "2aacdaa0-7106-45f5-cce8-bd9547a8a4dd",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 36
+        }
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "'Windows-1252'"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "string"
+            }
+          },
+          "metadata": {},
+          "execution_count": 3
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def read_csv(csv, encoding):\n",
+        "    df = pd.read_csv(csv, encoding=encoding, sep= \",\", on_bad_lines='skip')\n",
+        "    return df"
+      ],
+      "metadata": {
+        "id": "8tZISr8n8ZZg"
+      },
+      "execution_count": 107,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df = read_csv('/content/train.csv','Windows-1252' )"
+      ],
+      "metadata": {
+        "id": "ATyjwnDJ8nlU"
+      },
+      "execution_count": 108,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "class DataError(Exception):\n",
+        "    pass"
+      ],
+      "metadata": {
+        "id": "7LT3eQdWAEyV"
+      },
+      "execution_count": 109,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "class DataReviewer:\n",
+        "\n",
+        "    def __init__(self,df):\n",
+        "      self.df = df\n",
+        "      self.data_cleaner = DataCleaner(df)\n",
+        "\n",
+        "    def show_sample(self, n=5):\n",
+        "      try:\n",
+        "            return self.df.sample(n)\n",
+        "      except Exception as e:\n",
+        "            raise DataError(f\"Error showing sample: {e}\")\n",
+        "\n",
+        "    def get_info(self):\n",
+        "        try:\n",
+        "            return self.df.info()\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error showing sample: {e}\")\n",
+        "\n",
+        "    def describe(self):\n",
+        "        try:\n",
+        "            return self.df.describe()\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error showing sample: {e}\")\n",
+        "\n",
+        "    def get_columns(self):\n",
+        "        try:\n",
+        "            return self.df.columns\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error showing sample: {e}\")\n",
+        "\n",
+        "    def count_rows(self, column):\n",
+        "        try:\n",
+        "            if column in self.df.columns:\n",
+        "                return self.df[column].count()\n",
+        "            else:\n",
+        "                raise DataError(f\"Column '{column}' not found in dataset.\")\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error counting rows: {e}\")\n",
+        "\n",
+        "    def get_unique(self,column):\n",
+        "        try:\n",
+        "            if column in self.df.columns:\n",
+        "                return self.df[column].unique()\n",
+        "            else:\n",
+        "                raise DataError(f\"Column '{column}' not found in dataset.\")\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error getting unique values: {e}\")\n",
+        "\n",
+        "    def check_nulls(self):\n",
+        "        try:\n",
+        "            return self.df.isnull().any()\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error checking nulls: {e}\")\n",
+        "\n",
+        "    def get_percentage_nulls(self):\n",
+        "        try:\n",
+        "            return self.df.isnull().sum() / len(self.df) * 100\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error checking nulls: {e}\")\n",
+        "\n",
+        "    def get_dtypes(self):\n",
+        "        try:\n",
+        "            return self.df.dtypes\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error checking nulls: {e}\")\n",
+        "\n",
+        "    def shape(self):\n",
+        "        try:\n",
+        "            return self.df.shape\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error getting shape: {e}\")\n",
+        "\n",
+        "    def count_unique(self, column):\n",
+        "        try:\n",
+        "            if column in self.df.columns:\n",
+        "                return self.df[column].nunique()\n",
+        "            else:\n",
+        "                raise DataError(f\"Column '{column}' not found in dataset.\")\n",
+        "        except Exception as e:\n",
+        "            raise DataError(f\"Error counting unique values: {e}\")"
+      ],
+      "metadata": {
+        "id": "ZeHQfxnu_tH5"
+      },
+      "execution_count": 114,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "class DataCleaner:\n",
+        "    def __init__(self, df):\n",
+        "        self.df = df\n",
+        "\n",
+        "    def drop_unnecessary_col(self):\n",
+        "        unnecessary_columns = ['textID', 'selected_text', 'Population -2020', 'Land Area (Km²)', 'Density (P/Km²);;;;;;;;;;;;']\n",
+        "        try:\n",
+        "            self.df = self.df.drop(columns=unnecessary_columns, errors='ignore')\n",
+        "            return self.df\n",
+        "        except KeyError as e:\n",
+        "            raise DataError(f\"Error dropping columns: {e}\")\n",
+        "\n",
+        "    def remove_nulls(self):\n",
+        "        columns_to_check = [\"sentiment\", \"Time of Tweet\", \"Age of User\", \"Country\"]\n",
+        "        try:\n",
+        "            self.df = self.df.dropna(subset=columns_to_check)\n",
+        "            return self.df\n",
+        "        except KeyError as e:\n",
+        "            raise DataError(f\"Error dropping nulls: {e}\")\n",
+        "\n",
+        "    def rename_col(self):\n",
+        "        try:\n",
+        "            self.df = self.df.rename(columns={\"Time of Tweet\": \"Time\", \"Age of User\": \"Age\"})\n",
+        "            return self.df\n",
+        "        except KeyError as e:\n",
+        "            raise DataError(f\"Error renaming columns: {e}\")"
+      ],
+      "metadata": {
+        "id": "C6K3QDs6_Vyn"
+      },
+      "execution_count": 128,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "class WrongDataRemover():\n",
+        "    def __init__(self, df):\n",
+        "        self.df = df\n",
+        "    def remove_wrong_age(self):\n",
+        "        valid_ranges = [\"0-20\", \"21-30\", \"31-45\", \"46-60\", \"60-70\", \"70-100\"]\n",
+        "        self.df = self.df[self.df['Age of User'].isin(valid_ranges)]\n",
+        "        return self.df\n",
+        "    def remove_wrong_time(self):\n",
+        "        valid_data = [\"noon\", \"night\", \"morning\"]\n",
+        "        self.df = self.df[self.df['Time of Tweet'].isin(valid_data)]\n",
+        "        return self.df\n",
+        "    def remove_wrong_countries(self):\n",
+        "        valid_data = ['Albania', 'Algeria', 'Andorra', 'Antigua and Barbuda',\n",
+        "       'Argentina', 'Armenia', 'Australia', 'Austria', 'Bahamas',\n",
+        "       'Bahrain', 'Bangladesh', 'Barbados', 'Benin', 'Bhutan',\n",
+        "       'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei',\n",
+        "       'Burkina Faso', 'Burundi', \"Côte d'Ivoire\", 'Cabo Verde',\n",
+        "       'Cambodia', 'Cameroon', 'Canada', 'Central African Republic',\n",
+        "       'China', 'Comoros', 'Croatia', 'Cuba', 'Czechia (Czech Republic)',\n",
+        "       'Democratic Republic of the Congo', 'Denmark', 'Djibouti',\n",
+        "       'Dominican Republic', 'Ecuador', 'El Salvador',\n",
+        "       'Equatorial Guinea', 'Eritrea', 'Estonia', 'Ethiopia', 'Fiji',\n",
+        "       'Finland', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana',\n",
+        "       'Greece', 'Grenada', 'Guatemala', 'Guinea-Bissau', 'Guyana',\n",
+        "       'Honduras', 'Hungary', 'India', 'Indonesia', 'Iraq', 'Ireland',\n",
+        "       'Israel', 'Italy', 'Japan', 'Jordan', 'Kenya', 'Kiribati',\n",
+        "       'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho',\n",
+        "       'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Malaysia',\n",
+        "       'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania',\n",
+        "       'Mexico', 'Micronesia', 'Monaco', 'Montenegro', 'Morocco',\n",
+        "       'Mozambique', 'Myanmar (formerly Burma)', 'Nepal', 'Nicaragua',\n",
+        "       'Niger', 'North Korea', 'North Macedonia', 'Norway', 'Pakistan',\n",
+        "       'Palau', 'Palestine State', 'Panama', 'Papua New Guinea',\n",
+        "       'Paraguay', 'Philippines', 'Portugal', 'Rwanda', 'Saint Lucia',\n",
+        "       'Saint Vincent and the Grenadines', 'Samoa',\n",
+        "       'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia',\n",
+        "       'Seychelles', 'Sierra Leone', 'Singapore', 'Slovenia', 'Somalia',\n",
+        "       'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan',\n",
+        "       'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Tajikistan',\n",
+        "       'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga',\n",
+        "       'Trinidad and Tobago', 'Tunisia', 'Turkmenistan', 'Tuvalu',\n",
+        "       'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom',\n",
+        "       'United States of America', 'Uruguay', 'Uzbekistan', 'Vanuatu',\n",
+        "       'Venezuela', 'Yemen', 'Zambia', 'Zimbabwe', 'Afghanistan',\n",
+        "       'Angola', 'Azerbaijan', 'Belgium', 'Belize', 'Bolivia', 'Bulgaria',\n",
+        "       'Chad', 'Chile', 'Costa Rica', 'Cyprus', 'Dominica', 'Egypt',\n",
+        "       'France', 'Haiti', 'Iceland', 'Jamaica', 'Madagascar', 'Malawi',\n",
+        "       'Namibia', 'Nauru', 'Netherlands', 'New Zealand', 'Nigeria',\n",
+        "       'Oman', 'Poland', 'Qatar', 'Russia', 'Saint Kitts and Nevis',\n",
+        "       'San Marino', 'Slovakia', 'Solomon Islands', 'South Africa',\n",
+        "       'Turkey', 'Vietnam', 'Belarus', 'Colombia',\n",
+        "       'Congo (Congo-Brazzaville)', 'Guinea', 'Holy See', 'Kazakhstan',\n",
+        "       'Moldova', 'Mongolia', 'Peru', 'Romania', 'Iran', 'Mauritius', 'Liberia', 'Eswatini (fmr. \"\"\"\"Swaziland\"\"\"\")\"\"']\n",
+        "        self.df = self.df[self.df['Country'].isin(valid_data)]\n",
+        "        return self.df\n",
+        "\n",
+        "    def change_country_names():\n",
+        "        replace_dict = {\"Czechia (Czech Republic)\" : \"Czechia\",\n",
+        "                        \"Democratic Republic of the Congo\": \"R.D. Congo\",\n",
+        "                        \"Myanmar (formerly Burma)\": \"Myanmar\",\n",
+        "                        \"Congo (Congo-Brazzaville)\" : \"Congo-Brazzaville\",\n",
+        "                        \"Eswatini (fmr. \"\"\"\"Swaziland\"\"\"\")\"\"\" : \"Eswatini\"\n",
+        "\n",
+        "\n",
+        "        }\n",
+        "        self.df['Country'] = df['Country'].replace(replace_dict)\n",
+        "        return df\n",
+        "\n",
+        "    def remove_wrong_sentiment(self):\n",
+        "        valid_sentiment = [\"positive\", \"negative\", \"neutral\"]\n",
+        "        self.df = self.df[self.df['sentiment'].isin(valid_sentiment)]\n",
+        "        return self.df\n"
+      ],
+      "metadata": {
+        "id": "Px40LmIW0WcB"
+      },
+      "execution_count": 98,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from abc import ABC, abstractmethod\n",
+        "import matplotlib.pyplot as plt\n",
+        "\n",
+        "class DataVisualizer(ABC):\n",
+        "    def __init__(self, df):\n",
+        "        self.df = df\n",
+        "\n",
+        "    @abstractmethod\n",
+        "    def get_positive(self):\n",
+        "        pass\n",
+        "\n",
+        "    @abstractmethod\n",
+        "    def get_negative(self):\n",
+        "        pass\n",
+        "\n",
+        "    @abstractmethod\n",
+        "    def get_sentiment(self):\n",
+        "        pass\n",
+        "\n",
+        "    @abstractmethod\n",
+        "    def compare_sentiment(self):\n",
+        "        pass\n",
+        "\n",
+        "class CountryAnalyzer(DataVisualizer):\n",
+        "\n",
+        "    def __init__(self, df, country):\n",
+        "        super().__init__(df)\n",
+        "        self.country = country\n",
+        "\n",
+        "    def get_positive(self):\n",
+        "        try:\n",
+        "            return self.df[(self.df['Country'] == self.country) & (self.df['sentiment'] == \"positive\")].shape[0]\n",
+        "        except Exception as e:\n",
+        "            print(f\"Error getting positive sentiment for {self.country}: {e}\")\n",
+        "\n",
+        "    def get_negative(self):\n",
+        "        try:\n",
+        "            return self.df[(self.df['Country'] == self.country) & (self.df['sentiment'] == \"negative\")].shape[0]\n",
+        "        except Exception as e:\n",
+        "            print(f\"Error getting negative sentiment for {self.country}: {e}\")\n",
+        "\n",
+        "    def get_sentiment(self):\n",
+        "        try:\n",
+        "            sentiment_counts = self.df[self.df['Country'] == self.country]['sentiment'].value_counts()\n",
+        "            sentiment_counts.plot(kind='bar', figsize=(10, 6))\n",
+        "            plt.title(f'Tweets in {self.country}')\n",
+        "            plt.xlabel('Sentiment')\n",
+        "            plt.ylabel('Number of Tweets')\n",
+        "            plt.show()\n",
+        "        except Exception as e:\n",
+        "            print(f\"Error plotting sentiment for {self.country}: {e}\")\n",
+        "\n",
+        "    def compare_sentiment(self, sentiment=\"negative\"):\n",
+        "        try:\n",
+        "            tweets_by_country = self.df[self.df['sentiment'] == sentiment]['Country'].value_counts()\n",
+        "            top_countries = tweets_by_country.head(10).sort_values(ascending=False)\n",
+        "            plt.figure(figsize=(12, 8))\n",
+        "\n",
+        "            colors = plt.cm.tab20(range(len(top_countries)))\n",
+        "\n",
+        "            bars = plt.bar(top_countries.index, top_countries.values, color=colors)\n",
+        "            plt.legend(top_countries.index, loc='upper right')\n",
+        "            plt.xticks(rotation=45, ha='right', fontsize=7)\n",
+        "\n",
+        "            plt.show()\n",
+        "        except KeyError as e:\n",
+        "            print(f\"KeyError: {e}. Make sure 'sentiment' and 'Country' columns exist in the DataFrame.\")\n",
+        "        except Exception as e:\n",
+        "            print(f\"Error comparing sentiment: {e}\")\n",
+        "\n",
+        "class AgeAnalyzer(DataVisualizer):\n",
+        "\n",
+        "    def __init__(self, df, age):\n",
+        "        super().__init__(df)\n",
+        "        self.age = age\n",
+        "\n",
+        "    def get_positive(self):\n",
+        "        try:\n",
+        "            return self.df[(self.df['Age'] == self.age) & (self.df['sentiment'] == \"positive\")].shape[0]\n",
+        "        except Exception as e:\n",
+        "            print(f\"Error getting positive sentiment for {self.age} years old: {e}\")\n",
+        "\n",
+        "    def get_negative(self):\n",
+        "        try:\n",
+        "            return self.df[(self.df['Age'] == self.age) & (self.df['sentiment'] == \"negative\")].shape[0]\n",
+        "        except Exception as e:\n",
+        "            print(f\"Error getting negative sentiment for {self.age} years old: {e}\")\n",
+        "\n",
+        "    def get_sentiment(self):\n",
+        "        try:\n",
+        "            sentiment_counts = self.df[self.df['Age'] == self.age]['sentiment'].value_counts()\n",
+        "            sentiment_counts.plot(kind='bar', figsize=(10, 6))\n",
+        "            plt.title(f'Tweets by people of {self.age} years old')\n",
+        "            plt.xlabel('Sentiment')\n",
+        "            plt.ylabel('Number of Tweets')\n",
+        "            plt.show()\n",
+        "        except Exception as e:\n",
+        "            print(f\"Error plotting sentiment for {self.age} years old: {e}\")\n",
+        "\n",
+        "    def compare_sentiment(self, sentiment=\"negative\"):\n",
+        "        try:\n",
+        "            tweets_by_age = self.df[self.df['sentiment'] == sentiment]['Age'].value_counts()\n",
+        "            top_ages = tweets_by_age.head(10).sort_values(ascending=False)\n",
+        "            plt.figure(figsize=(12, 8))\n",
+        "\n",
+        "            colors = plt.cm.tab20(range(len(top_ages)))\n",
+        "\n",
+        "            bars = plt.bar(top_ages.index, top_ages.values, color=colors)\n",
+        "            plt.legend(top_ages.index, loc='upper right')\n",
+        "            plt.xticks(rotation=45, ha='right', fontsize=7)\n",
+        "\n",
+        "            plt.show()\n",
+        "        except KeyError as e:\n",
+        "            print(f\"KeyError: {e}. Make sure 'sentiment' and 'Age' columns exist in the DataFrame.\")\n",
+        "        except Exception as e:\n",
+        "            print(f\"Error comparing sentiment: {e}\")\n"
+      ],
+      "metadata": {
+        "id": "9mPFoHQQzhkL"
+      },
+      "execution_count": 105,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Solucionar los nombres de países solapados. Asegurarme de que el código de matplotlib está bien. Hacer otro tipo de gráficas para comparar países. Hacer otra clase que se base en la abstracta pero que sea para comparar edades.\n",
+        "----\n",
+        "Usar excepciones personalizadas\n"
+      ],
+      "metadata": {
+        "id": "Zlt2dTX_9gD7"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        ""
+      ],
+      "metadata": {
+        "id": "v8DdI4d8s3et"
+      },
+      "execution_count": 85,
+      "outputs": []
+    }
+  ]
+}
